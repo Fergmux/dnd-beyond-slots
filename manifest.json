@@ -7,14 +7,25 @@
     "default_popup": "index.html",
     "default_icon": "hello_extensions.png"
   },
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "debugger",
+    "storage",
+    "webRequest"
+  ],
+  "background": {
+    "service_worker": "extension/background.ts"
+  },
   "content_scripts": [
     {
       "matches": [
         "https://www.dndbeyond.com/characters/*"
       ],
       "js": [
-        "content.ts"
+        "extension/content.ts"
       ],
+      "run_at": "document_start",
       "all_frames": true
     }
   ]

@@ -1,27 +1,39 @@
 <template>
   <div>Slots</div>
   <div class="container">
-    <div>
-      <h4>Equipped</h4>
-      <div class="slotList">
-        <div v-for="item in itemsFormatted.equipped" class="slot">
-          {{ item }}
+    <button @click="toggleVisbile">
+      {{ visible ? 'Hide' : 'Show' }} slots
+    </button>
+    <div v-show="visible">
+      {{ itemsFormatted }}
+      <div v-for="slot in Object.values(slots)">
+        <h4>{{ slot.name }}</h4>
+        <div class="slotList">
+          <div
+            v-for="item in itemsFormatted[slot.id]"
+            :style="{
+              'background-image': `url(${item.img})`,
+              width: `${item.size * 70}px`
+            }"
+            class="slot"
+          >
+            {{ item.name }}
+          </div>
         </div>
       </div>
-      <h4>Pockets</h4>
+      <h4>Other items</h4>
       <div class="slotList">
-        <div v-for="item in itemsFormatted.pockets" class="slot">
-          {{ item }}
-        </div>
-      </div>
-      <h4>Worn</h4>
-      <div class="slotList">
-        <div v-for="item in itemsFormatted.worn" class="slot">{{ item }}</div>
-      </div>
-      <h4>Backpack</h4>
-      <div class="slotList">
-        <div v-for="item in itemsFormatted.backpack" class="slot">
-          {{ item }}
+        <div
+          v-for="item in Object.values(items).filter(
+            (item) => item.slot === 'none'
+          )"
+          :style="{
+            'background-image': `url(${item.img})`,
+            width: `${item.size * 70}px`
+          }"
+          class="slot"
+        >
+          {{ item.name }}
         </div>
       </div>
     </div>
@@ -29,37 +41,69 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, ComputedRef, Ref } from 'vue'
-import { Slot, Item } from '../types'
+import { computed, ref, ComputedRef, Ref, PropType } from 'vue'
+import { Slots, Slot, Item, Items, SyncEvent } from '../types/types'
+import { Data } from '../types/Character'
 
-const setItem = (item: Item) => {
-  console.log(items)
-  console.log(items.value)
-  console.log(item.slot)
-  console.log(items.value[item.slot])
-  items.value[item.slot].push(item.name)
-}
-
-defineExpose({ setItem })
-
-const items: Ref<Record<Slot, string[]>> = ref({
-  equipped: [],
-  pockets: [],
-  worn: [],
-  backpack: []
+defineProps({
+  characterInfo: Object as PropType<Data>
 })
 
-const format =
-  (array: string[]) =>
-  (item: string, index: number): string =>
-    array[index] ? array[index] : item
+const visible = ref(true)
+const toggleVisbile = () => (visible.value = !visible.value)
 
-const itemsFormatted: ComputedRef<Record<Slot, string[]>> = computed(() => ({
-  equipped: Array(4).fill('').map(format(items.value.equipped)),
-  pockets: Array(6).fill('').map(format(items.value.pockets)),
-  worn: Array(13).fill('').map(format(items.value.worn)),
-  backpack: Array(15).fill('').map(format(items.value.backpack))
-}))
+// defineExpose({ setItem })
+
+const items: Ref<Items> = ref({})
+const slots: Ref<Slots> = ref({})
+
+type ItemSlot = Record<string, Item[]>
+const itemSlots: ComputedRef<ItemSlot> = computed(
+  () =>
+    Object.values(slots.value).reduce(
+      (obj: ItemSlot, slot: Slot) => ({
+        ...obj,
+        [slot.id]: Object.values(items.value).filter(
+          (item: Item) => item.slot === slot.id
+        )
+      }),
+      {}
+    ),
+  {}
+)
+
+chrome.runtime.onMessage.addListener((request: Event) => {
+  if (request.type === 'SYNC') {
+    console.log('manager sync')
+    const syncEvent = request as unknown as SyncEvent
+    items.value = syncEvent.value.items
+    slots.value = syncEvent.value.slots
+  }
+})
+
+const itemsFormatted: ComputedRef<Record<string, Item[]>> = computed(() =>
+  Object.values(slots.value).reduce((obj, slot) => {
+    const totalItems = Object.values(items.value)
+      .filter((item) => item.slot === slot.id)
+      .reduce((total, item) => total + item.size, 0)
+    return {
+      ...obj,
+      [slot.id]: [
+        ...itemSlots.value[slot.id],
+        ...Array(slot.size - totalItems >= 0 ? slot.size - totalItems : 0).fill(
+          ''
+        )
+      ]
+    }
+  }, {})
+)
+// {
+// equipped: Array(4).fill('').map(format(itemSlots.value.equipped)),
+// pockets: Array(6).fill('').map(format(itemSlots.value.pockets)),
+// worn: Array(13).fill('').map(format(itemSlots.value.worn)),
+// backpack: Array(15).fill('').map(format(itemSlots.value.backpack)),
+// none: itemSlots.value.none
+// }))
 </script>
 
 <style lang="scss">
@@ -69,11 +113,16 @@ const itemsFormatted: ComputedRef<Record<Slot, string[]>> = computed(() => ({
 
 .slotList {
   display: flex;
+  flex-wrap: wrap;
 
   .slot {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     border: 1px solid white;
+    background-repeat: no-repeat;
+    background-size: cover;
+    overflow: hidden;
+
     // margin-right: 10px;
   }
 }

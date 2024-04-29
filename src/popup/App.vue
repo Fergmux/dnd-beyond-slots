@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import Popup from './components/Popup.vue'
+import Popup from './Popup.vue'
 </script>

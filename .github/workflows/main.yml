@@ -10,7 +10,6 @@ jobs:
         with:
           envkey_VITE_IMGUR_CLIENT_ID: ${{ vars.VITE_IMGUR_CLIENT_ID }}
           envkey_VITE_IMGUR_CLIENT_SECRET: ${{ secrets.VITE_IMGUR_CLIENT_SECRET }}
-      - run: echo "${{ toJSON(vars) }}"
   # Explore-GitHub-Actions:
   #   runs-on: ubuntu-latest
   #   steps:
@@ -52,19 +51,18 @@ jobs:
           files: dist/
           dest: dist${{ steps.package-version.outputs.current-version }}.zip
       - run: echo "${{ steps.package-version.outputs.current-version }}"
-      - run: echo "${{ steps.package-version.outputs }}"
+      - run: echo "${{ toJSON(steps.package-version.outputs) }}"
   push-to-s3:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo "${{ vars.AWS_ACCESS_KEY }}"
       - name: Setup AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY }}
+          aws-access-key-id: ${{ vars.AWS_S3_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
           aws-region: eu-west-2
       - name: Sync files to S3 bucket
         run: |
-          aws s3 sync dist s3://dnd-slots-extension-version-archive --delete
+          aws s3 sync dist.zip s3://dnd-slots-extension-version-archive --delete

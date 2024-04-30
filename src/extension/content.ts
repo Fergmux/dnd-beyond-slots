@@ -18,9 +18,6 @@ import { ImgurClient } from 'imgur'
 
 // limit of 12,500 requests per day, will upgrade if I hit that
 const client = new ImgurClient({
-  // ts-ignore
-  // comment to ignore next line of typescript
-
   clientId: import.meta.env.VITE_IMGUR_CLIENT_ID,
   clientSecret: import.meta.env.VITE_IMGUR_CLIENT_SECRET
 })

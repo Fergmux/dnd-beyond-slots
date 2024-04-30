@@ -49,6 +49,10 @@ jobs:
         with:
           files: dist dist/
           dest: dist${{ steps.package-version.outputs.current-version }}.zip
+      - uses: actions/upload-artifact@v1.1
+        with:
+          name: my-artifact
+          path: ${{ github.workspace }}/dist${{ steps.package-version.outputs.current-version }}.zip
       - run: ls
       # push-to-s3:
       #   runs-on: ubuntu-latest

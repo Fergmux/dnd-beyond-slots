@@ -10,7 +10,7 @@ jobs:
         with:
           envkey_VITE_IMGUR_CLIENT_ID: ${{ vars.VITE_IMGUR_CLIENT_ID }}
           envkey_VITE_IMGUR_CLIENT_SECRET: ${{ secrets.VITE_IMGUR_CLIENT_SECRET }}
-      - run: echo "${{ vars }}"
+      - run: echo "${{ toJSON(vars) }}"
   # Explore-GitHub-Actions:
   #   runs-on: ubuntu-latest
   #   steps:

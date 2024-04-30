@@ -1,32 +1,54 @@
 <template>
-  <div>Slots</div>
-  <div class="container">
-    <button @click="toggleVisbile">
-      {{ visible ? 'Hide' : 'Show' }} slots
-    </button>
-    <div v-show="visible">
-      {{ itemsFormatted }}
-      <div v-for="slot in Object.values(slots)">
-        <h4>{{ slot.name }}</h4>
-        <div class="slotList">
-          <div
-            v-for="item in itemsFormatted[slot.id]"
-            :style="{
-              'background-image': `url(${item.img})`,
-              width: `${item.size * 70}px`
-            }"
-            class="slot"
+  <div class="ct-content-group__header">
+    <div class="ct-content-group__header-content">Slots</div>
+  </div>
+  <div class="container ct-content-group__content">
+    <!-- SLOTS -->
+
+    <draggable :modelValue="slotsArray" tag="div" @update:modelValue="moveSlot">
+      <template #item="{ element: slot }">
+        <!-- <div @mouseover.stop="onDragOver"> -->
+        <div>
+          <h4>{{ slot.name }}</h4>
+
+          <!-- ITEMS -->
+          <draggable
+            tag="div"
+            @update:modelValue="moveItem($event, slot)"
+            :modelValue="itemsFormatted[slot.id]"
+            @start="dragging = true"
+            @end="dragging = false"
+            group="items"
+            class="slotList"
           >
-            {{ item.name }}
-          </div>
+            <template #item="{ element: item }">
+              <div
+                :style="{
+                  'background-image': `url(${item.img})`,
+                  width: `${(item.size || 1) * 70}px`
+                }"
+                class="slot"
+              >
+                {{ item.name }}
+              </div>
+            </template>
+          </draggable>
         </div>
-      </div>
-      <h4>Other items</h4>
-      <div class="slotList">
+      </template>
+    </draggable>
+    <!-- </div> -->
+
+    <!-- UNSLOTTED ITEMS -->
+    <h4>Other items</h4>
+    <draggable
+      tag="div"
+      @update:modelValue="moveItem($event, { id: 'none' })"
+      :modelValue="otherItems"
+      group="items"
+      class="slotList"
+    >
+      <template #item="{ element: item }">
         <div
-          v-for="item in Object.values(items).filter(
-            (item) => item.slot === 'none'
-          )"
           :style="{
             'background-image': `url(${item.img})`,
             width: `${item.size * 70}px`
@@ -35,43 +57,31 @@
         >
           {{ item.name }}
         </div>
-      </div>
-    </div>
+      </template>
+    </draggable>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, ComputedRef, Ref, PropType } from 'vue'
+import {
+  computed,
+  ref,
+  ComputedRef,
+  WritableComputedRef,
+  Ref,
+  PropType
+} from 'vue'
 import { Slots, Slot, Item, Items, SyncEvent } from '../types/types'
 import { Data } from '../types/Character'
+import draggable from 'vuedraggable'
 
 defineProps({
   characterInfo: Object as PropType<Data>
 })
 
-const visible = ref(true)
-const toggleVisbile = () => (visible.value = !visible.value)
+// GENERAL //
 
-// defineExpose({ setItem })
-
-const items: Ref<Items> = ref({})
-const slots: Ref<Slots> = ref({})
-
-type ItemSlot = Record<string, Item[]>
-const itemSlots: ComputedRef<ItemSlot> = computed(
-  () =>
-    Object.values(slots.value).reduce(
-      (obj: ItemSlot, slot: Slot) => ({
-        ...obj,
-        [slot.id]: Object.values(items.value).filter(
-          (item: Item) => item.slot === slot.id
-        )
-      }),
-      {}
-    ),
-  {}
-)
-
+// watch for changes to the data
 chrome.runtime.onMessage.addListener((request: Event) => {
   if (request.type === 'SYNC') {
     console.log('manager sync')
@@ -81,33 +91,124 @@ chrome.runtime.onMessage.addListener((request: Event) => {
   }
 })
 
-const itemsFormatted: ComputedRef<Record<string, Item[]>> = computed(() =>
-  Object.values(slots.value).reduce((obj, slot) => {
-    const totalItems = Object.values(items.value)
-      .filter((item) => item.slot === slot.id)
-      .reduce((total, item) => total + item.size, 0)
-    return {
-      ...obj,
-      [slot.id]: [
-        ...itemSlots.value[slot.id],
-        ...Array(slot.size - totalItems >= 0 ? slot.size - totalItems : 0).fill(
-          ''
-        )
-      ]
-    }
-  }, {})
+// item being dragged
+const dragging = ref(false)
+
+// SLOTS //
+
+const slots: Ref<Slots> = ref({})
+const slotsArray = computed(() =>
+  Object.values(slots.value).sort((a, b) => a.index - b.index)
 )
-// {
-// equipped: Array(4).fill('').map(format(itemSlots.value.equipped)),
-// pockets: Array(6).fill('').map(format(itemSlots.value.pockets)),
-// worn: Array(13).fill('').map(format(itemSlots.value.worn)),
-// backpack: Array(15).fill('').map(format(itemSlots.value.backpack)),
-// none: itemSlots.value.none
-// }))
+
+const updateSlots = () =>
+  chrome.runtime.sendMessage({ type: 'UPDATE_SLOTS', value: slots.value })
+
+// intercept a slot draggable move
+const moveSlot = (slotArray: Slot[]) => {
+  slotArray.forEach((slot, index) => {
+    slot.index = index
+  })
+  updateSlots()
+}
+
+// ITEMS //
+
+const items: Ref<Items> = ref({})
+const trackedItems = computed(() =>
+  Object.values(items.value).filter((item) => item.track)
+)
+const updateItem = (item: Item[]) => {
+  chrome.runtime.sendMessage({ type: 'UPDATE_ITEM', value: item })
+}
+// unslotted items
+const otherItems = computed(() => {
+  const noSlot = trackedItems.value.filter(
+    (item) => item.slot === 'none' && item.track
+  )
+  return noSlot.length ? noSlot : [{}]
+})
+
+// an object with key: slotId and value: array of items
+type ItemSlot = Record<string, Item[]>
+const itemSlots: ComputedRef<ItemSlot> = computed(
+  () =>
+    Object.values(slots.value).reduce(
+      (obj: ItemSlot, slot: Slot) => ({
+        ...obj,
+        [slot.id]: trackedItems.value.filter(
+          (item: Item) => item.slot === slot.id
+        )
+      }),
+      {}
+    ),
+  {}
+)
+
+// the arranged items (keyed by slot)
+const itemsFormatted: WritableComputedRef<Record<string, Item[]>> = computed({
+  get() {
+    return Object.values(slots.value).reduce((obj, slot) => {
+      return {
+        ...obj,
+        [slot.id]: formatItems(slot)
+      }
+    }, {})
+  },
+  set(newValue) {
+    console.log(newValue, 'FUCK')
+  }
+})
+
+// intercept an item draggable move
+const moveItem = (itemArray: Item[], slot: { id: string; size?: number }) => {
+  if (
+    itemArray.reduce((total, item) => total + (item.size ?? 0), 0) <=
+    (slot.size && slot.id !== 'none' ? slot.size : Infinity)
+  ) {
+    const updatedItems = itemArray.map((item: Item, index: number) => ({
+      ...item,
+      index,
+      slot: slot.id
+    }))
+    updateItem(updatedItems)
+  }
+}
+
+// arrange the items in the slot
+const formatItems = (slot: Slot) => {
+  const totalItems = trackedItems.value
+    .filter((item) => item.slot === slot.id)
+    .reduce((total, item) => total + item.size, 0)
+
+  let formattedItems: Item[] = []
+  const orderedItems = itemSlots.value[slot.id].sort((a, b) =>
+    a.index === -1 ? 1 : a.index - b.index
+  )
+
+  orderedItems.forEach((item: Item, index: number) => {
+    formattedItems[index] = item
+    item.index = index
+  })
+
+  const spaces = slot.size - totalItems
+  formattedItems.push(...Array(spaces < 0 ? 0 : spaces).fill({}))
+
+  return formattedItems
+}
+
+// const onDragOver = (event: Event) => {
+//   if (dragging.value && event.target instanceof Element) {
+//     console.log(event.target, 'event.target', dragging.value)
+//     event.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+//   }
+//   // event.preventDefault()
+// }
 </script>
 
 <style lang="scss">
 .container {
+  padding-bottom: 20px;
   text-align: left;
 }
 
@@ -116,12 +217,20 @@ const itemsFormatted: ComputedRef<Record<string, Item[]>> = computed(() =>
   flex-wrap: wrap;
 
   .slot {
+    padding: 2px;
     width: 70px;
     height: 70px;
     border: 1px solid white;
     background-repeat: no-repeat;
     background-size: cover;
     overflow: hidden;
+    font-weight: bold;
+    text-shadow:
+      2px 2px 5px black,
+      -2px 2px 5px black,
+      2px -2px 5px black,
+      -2px -2px 5px black;
+    color: white;
 
     // margin-right: 10px;
   }

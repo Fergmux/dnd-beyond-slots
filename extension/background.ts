@@ -3,6 +3,7 @@ let version = '1.0'
 let characterId
 let requestId
 
+// watch for the api data
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
   // Forward any messages from content to the manager/popup
   if (currentTab?.id) {
@@ -10,8 +11,9 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     chrome.tabs.sendMessage(currentTab.id, request)
   }
 
+  // the dnd beyond page has loaded so start snooping the network
   if (request.type === 'LISTEN') {
-    console.log('background listen')
+    console.log('background listen', request)
     chrome.tabs.query(
       //get current Tab
       {
@@ -22,7 +24,11 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
         currentTab = tabArray[0]
         const urlParts = currentTab.url?.split('/')
         characterId = urlParts && urlParts[urlParts.length - 1]
-        if (currentTab.id) {
+        // if we're on the right tab attach the debugger and bind callback
+        if (
+          currentTab.id &&
+          currentTab.url?.includes('dndbeyond.com/characters/')
+        ) {
           chrome.debugger.attach(
             {
               //debug at current tab
@@ -36,6 +42,7 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     )
   }
 
+  // add the listener for the debugger
   function onAttach(tabId: number) {
     chrome.debugger.sendCommand(
       {
@@ -48,6 +55,7 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     chrome.debugger.onEvent.addListener(allEventHandler)
   }
 
+  // on debugger event check for api data
   function allEventHandler(
     debuggeeId: chrome.debugger.Debuggee,
     message: string,
@@ -57,6 +65,8 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       return
     }
 
+    // if we have a response, set the request ID
+    // (we can't get the response here)
     if (message == 'Network.responseReceived') {
       const characterUrl = `https://character-service.dndbeyond.com/character/v5/character/${characterId}?includeCustomItems=true`
       if (params?.response?.url === characterUrl && params?.type === 'XHR') {
@@ -64,6 +74,8 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       }
     }
 
+    // once the response of the rquest set above is finsihed loading get the response data
+    // (we can't get the url here)
     if (message == 'Network.loadingFinished') {
       if (params?.requestId === requestId) {
         chrome.debugger.sendCommand(
@@ -76,13 +88,13 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
           },
           function (response) {
             const characterResponse = response as { body: string }
-            // you get the response body here!
-            // you can close the debugger tips by:
+            // send the data to the content script
             chrome.tabs.sendMessage(debuggeeId.tabId || 0, {
               type: 'CHARACTER',
               value: JSON.parse(characterResponse.body)
             })
-            // chrome.debugger.detach(debuggeeId)
+            // detatch the debugger
+            chrome.debugger.detach(debuggeeId)
           }
         )
       }

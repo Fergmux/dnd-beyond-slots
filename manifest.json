@@ -1,18 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Hello Extensions of the world",
-  "description": "Base Level Extension",
+  "name": "DnD Beyond Slots",
+  "description": "Adds a slot based inventory management to your DnD Beyond character sheet",
   "version": "1.0",
   "action": {
     "default_popup": "index.html",
-    "default_icon": "hello_extensions.png"
+    "default_icon": "DnDSlots.png"
   },
   "permissions": [
     "tabs",
     "activeTab",
     "debugger",
-    "storage",
-    "webRequest"
+    "storage"
   ],
   "background": {
     "service_worker": "extension/background.ts"

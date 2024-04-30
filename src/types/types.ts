@@ -4,12 +4,15 @@ export interface Item {
   id: number
   img: string
   size: number
+  track: boolean
+  index: number
 }
 
 export interface Slot {
   id: string
   name: string
   size: number
+  index: number
 }
 
 export interface Event {
@@ -29,19 +32,13 @@ export interface SyncEvent extends Event {
 }
 
 export interface UpdateItemEvent extends Event {
-  value: Item
+  value: Item[]
 }
 
 export interface UpdateSlotsEvent extends Event {
   value: Slots
 }
 
-// export interface Response {
-//   requestId: chrome.debugger NetworkStatus.requestId
-//   loaderId
-//   timestamp
-//   type
-//   response
-//   hasExtraInfo
-//   frameId
-// }
+export interface UpdateKeyEvent extends Event {
+  value: string
+}

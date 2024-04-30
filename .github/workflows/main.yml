@@ -59,4 +59,4 @@ jobs:
           aws-region: eu-west-2
       - name: Sync files to S3 bucket
         run: |
-          aws s3 cp dist${{ steps.package-version.outputs.current-version }}.zip s3://dnd-slots-extension-version-archive
+          aws s3 cp "dist${{ steps.package-version.outputs.current-version }}.zip" s3://dnd-slots-extension-version-archive

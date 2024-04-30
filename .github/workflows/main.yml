@@ -49,5 +49,19 @@ jobs:
       - uses: vimtor/action-zip@v1.2
         with:
           files: dist/
-          dest: dist${{ steps.package-version.outputs.current-version }}.zip
-      - run: cd dist${{ steps.package-version.outputs.current-version }}.zip && ls
+          dest: 'dist${{ steps.package-version.outputs.current-version }}.zip'
+      - run: echo "${{ steps.package-version.outputs.current-version }}"
+  push-to-s3:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+          aws-region: us-east-1
+      - name: Sync files to S3 bucket
+        run: |
+          aws s3 sync dist s3://dnd-slots-extension-version-archive --delete

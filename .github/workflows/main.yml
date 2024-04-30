@@ -43,7 +43,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@v1.3.1
       - uses: actions/checkout@v4
       - run: ls
-      - run: echo "${{env.GITHUB_WORKSPACE}}"
+      - run: echo "${{github.workspace}}"
       - run: pwd
       - uses: vimtor/action-zip@v1.2
         with:

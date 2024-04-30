@@ -21,8 +21,8 @@ const client = new ImgurClient({
   // ts-ignore
   // comment to ignore next line of typescript
 
-  clientId: import.meta.env.VITE_SOME_KEY,
-  clientSecret: '81b1774b145fb8e0a028609db9abf0b80e9690bc'
+  clientId: import.meta.env.VITE_IMGUR_CLIENT_ID,
+  clientSecret: import.meta.env.VITE_IMGUR_CLIENT_SECRET
 })
 
 // let manager: typeof Manager

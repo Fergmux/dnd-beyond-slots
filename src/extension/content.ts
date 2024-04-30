@@ -1,7 +1,7 @@
-import { cloneVNode, createApp } from 'vue'
+import { createApp } from 'vue'
 // import './src/style.css'
-import App from '../src/manager/App.vue'
-// import Manager from '../src/manager/Manager.vue'
+import App from '../manager/App.vue'
+// import Manager from '../manager/Manager.vue'
 import {
   Event,
   Slots,
@@ -10,15 +10,18 @@ import {
   UpdateSlotsEvent,
   UpdateKeyEvent,
   UpdateItemEvent
-} from '../src/types/types.ts'
-import { Response, Data, Inventory } from '../src/types/Character.ts'
+} from '../types/types.ts'
+import { Response, Data, Inventory } from '../types/Character.ts'
 import OpenAI from 'openai'
 import isEqual from 'lodash/fp/isEqual'
 import { ImgurClient } from 'imgur'
 
 // limit of 12,500 requests per day, will upgrade if I hit that
 const client = new ImgurClient({
-  clientId: 'e575352c0f0cadb',
+  // ts-ignore
+  // comment to ignore next line of typescript
+
+  clientId: import.meta.env.VITE_SOME_KEY,
   clientSecret: '81b1774b145fb8e0a028609db9abf0b80e9690bc'
 })
 
@@ -227,20 +230,39 @@ const syncItems = (inventory: Inventory[]) => {
       const savedItems = itemsData
 
       // merge api items with local items
-      items = Object.fromEntries(
-        inventory.map((item: Inventory): [number, Item] => [
-          item.id,
-          {
-            id: item.id,
-            name: item.definition.name,
-            img: savedItems?.[item.id]?.img ?? item.definition.avatarUrl ?? '',
-            slot: savedItems?.[item.id]?.slot ?? 'none',
-            size: savedItems?.[item.id]?.size ?? 1,
-            track: savedItems?.[item.id]?.track ?? true,
-            index: savedItems?.[item.id]?.index ?? -1
-          }
-        ])
-      )
+      const formattedItems = inventory.map((item: Inventory): Item => {
+        const savedItem = savedItems?.[item.id]
+        return {
+          id: item.id,
+          name: item.definition.name,
+          img: savedItem?.img ?? item.definition.avatarUrl ?? '',
+          slot: savedItem?.slot ?? 'none',
+          size: savedItem?.size ?? 1,
+          track: savedItem?.track ?? true,
+          index: savedItem?.index ?? -1,
+          stackSize: savedItem?.stackSize ?? 20,
+          quantity: item.quantity
+        }
+      })
+
+      const extraStacks: Items = {}
+      formattedItems.forEach((item: Item) => {
+        let x = 0
+        while (item.quantity > item.stackSize) {
+          item.quantity -= item.stackSize
+          const newItem: Item = { ...item, id: Number(String(item.id) + x) }
+          newItem.quantity = item.stackSize
+          extraStacks[newItem.id] = newItem
+          x++
+        }
+      })
+
+      items = {
+        ...Object.fromEntries(
+          formattedItems.map((item: Item): [number, Item] => [item.id, item])
+        ),
+        ...extraStacks
+      }
 
       // generate images where neccesary
       await getItemImages(Object.values(items))
@@ -271,10 +293,10 @@ const syncItems = (inventory: Inventory[]) => {
   })
 }
 
-let storeItemTimeout
-let itemsToStore = {}
+let storeItemTimeout: NodeJS.Timeout
+let itemsToStore: Items = {}
 // debounce storing of items to respect rate limits
-const storeItems = (items) => {
+const storeItems = (items: Item[]) => {
   // if we're already waiting reset the timer and buffer items for saving
   if (storeItemTimeout) {
     clearTimeout(storeItemTimeout)
@@ -292,7 +314,7 @@ const storeItems = (items) => {
   }, 5000)
 }
 
-let storeSlotsTimeout
+let storeSlotsTimeout: NodeJS.Timeout
 // debounce saving of slots to respect rate limits
 const storeSlots = () => {
   if (storeSlotsTimeout) clearTimeout(storeSlotsTimeout)
@@ -374,7 +396,7 @@ const watchDom = () => {
 
   if (targetNode) {
     // if the container is present watch it for a change to inventory tab
-    const callback = (mutationList, observer) => {
+    const callback = () => {
       mountApp()
     }
 

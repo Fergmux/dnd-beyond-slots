@@ -6,6 +6,8 @@ export interface Item {
   size: number
   track: boolean
   index: number
+  stackSize: number
+  quantity: number
 }
 
 export interface Slot {

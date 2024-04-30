@@ -30,6 +30,9 @@
                 class="slot"
               >
                 {{ item.name }}
+                <span class="footer">{{
+                  item.quantity > 1 ? item.quantity : ''
+                }}</span>
               </div>
             </template>
           </draggable>
@@ -56,6 +59,9 @@
           class="slot"
         >
           {{ item.name }}
+          <span class="footer">{{
+            item.quantity > 1 ? item.quantity : ''
+          }}</span>
         </div>
       </template>
     </draggable>
@@ -217,6 +223,7 @@ const formatItems = (slot: Slot) => {
   flex-wrap: wrap;
 
   .slot {
+    position: relative;
     padding: 2px;
     width: 70px;
     height: 70px;
@@ -232,7 +239,12 @@ const formatItems = (slot: Slot) => {
       -2px -2px 5px black;
     color: white;
 
-    // margin-right: 10px;
+    .footer {
+      position: absolute;
+      font-size: 10px;
+      right: 4px;
+      bottom: 0;
+    }
   }
 }
 </style>

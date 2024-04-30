@@ -41,6 +41,7 @@
         <th>Slot</th>
         <th>Size</th>
         <th>Index</th>
+        <th>Stack size</th>
         <th>Image</th>
         <th>AI Image</th>
         <th>Track</th>
@@ -75,6 +76,15 @@
             @input="updateItem(item)"
             min="-1"
             :max="slots[item.slot]?.size - item.size ?? 999"
+            type="number"
+          />
+        </td>
+        <td>
+          <input
+            v-model="item.stackSize"
+            @input="updateItem(item)"
+            min="1"
+            :max="999"
             type="number"
           />
         </td>

@@ -1,10 +1,10 @@
 let currentTab: chrome.tabs.Tab
 let version = '1.0'
-let characterId
-let requestId
+let characterId: string
+let requestId: string
 
 // watch for the api data
-chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request) {
   // Forward any messages from content to the manager/popup
   if (currentTab?.id) {
     console.log('background message pass', request.type)
@@ -23,7 +23,7 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       function (tabArray) {
         currentTab = tabArray[0]
         const urlParts = currentTab.url?.split('/')
-        characterId = urlParts && urlParts[urlParts.length - 1]
+        characterId = (urlParts && urlParts[urlParts.length - 1]) || ''
         // if we're on the right tab attach the debugger and bind callback
         if (
           currentTab.id &&
@@ -69,7 +69,11 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     // (we can't get the response here)
     if (message == 'Network.responseReceived') {
       const characterUrl = `https://character-service.dndbeyond.com/character/v5/character/${characterId}?includeCustomItems=true`
-      if (params?.response?.url === characterUrl && params?.type === 'XHR') {
+      if (
+        params?.response?.url === characterUrl &&
+        params?.type === 'XHR' &&
+        params.requestId
+      ) {
         requestId = params?.requestId
       }
     }

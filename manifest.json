@@ -1,20 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "DnD Beyond Slots",
+  "name": "DnD Beyond Slots (Dev)",
   "description": "Adds a slot based inventory management to your DnD Beyond character sheet",
   "version": "1.0",
   "action": {
     "default_popup": "index.html",
     "default_icon": "DnDSlots.png"
   },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
-    "tabs",
     "activeTab",
     "debugger",
     "storage"
   ],
   "background": {
-    "service_worker": "extension/background.ts"
+    "service_worker": "src/extension/background.ts"
   },
   "content_scripts": [
     {
@@ -22,7 +27,7 @@
         "https://www.dndbeyond.com/characters/*"
       ],
       "js": [
-        "extension/content.ts"
+        "src/extension/content.ts"
       ],
       "run_at": "document_start",
       "all_frames": true

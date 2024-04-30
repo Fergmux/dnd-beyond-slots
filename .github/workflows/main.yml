@@ -61,7 +61,7 @@ jobs:
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-          aws-region: us-east-1
+          aws-region: eu-west-2
       - name: Sync files to S3 bucket
         run: |
           aws s3 sync dist s3://dnd-slots-extension-version-archive --delete

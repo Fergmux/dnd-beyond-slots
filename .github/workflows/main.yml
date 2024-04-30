@@ -50,4 +50,4 @@ jobs:
         with:
           files: dist/
           dest: dist${{ steps.package-version.outputs.current-version }}.zip
-      - run: ls
+      - run: cd dist${{ steps.package-version.outputs.current-version }}.zip && ls

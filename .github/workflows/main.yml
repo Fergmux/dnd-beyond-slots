@@ -45,10 +45,9 @@ jobs:
       - run: ls
       - run: echo "${{github.workspace}}"
       - run: pwd
-      - uses: vimtor/action-zip@v1.2
+      - uses: montudor/action-zip@v1
         with:
-          files: dist dist/
-          dest: dist${{ steps.package-version.outputs.current-version }}.zip
+          args: zip -qq -r dist${{ steps.package-version.outputs.current-version }}.zip dist
       - uses: actions/upload-artifact@v4
         with:
           name: my-artifact

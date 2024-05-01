@@ -75,7 +75,9 @@
             v-model="item.index"
             @input="updateItem(item)"
             min="-1"
-            :max="slots[item.slot]?.size - item.size ?? 999"
+            :max="
+              item.slot === 'none' ? 999 : slots[item.slot].size - item.size
+            "
             type="number"
           />
         </td>

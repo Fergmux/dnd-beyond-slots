@@ -27,12 +27,13 @@ jobs:
       - uses: montudor/action-zip@v1
         with:
           args: zip -qq -r dist${{ steps.package-version.outputs.current-version }}.zip dist
-      - name: Upload zip file to s3
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: my-artifact
+          name: dist v${{ steps.package-version.outputs.current-version }}
           path: ${{ github.workspace }}/dist${{ steps.package-version.outputs.current-version }}.zip
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Upload zip file to s3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ vars.AWS_S3_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}

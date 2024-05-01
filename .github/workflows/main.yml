@@ -8,28 +8,12 @@ jobs:
       matrix:
         node-version: [20.x]
     steps:
+      - uses: actions/checkout@v4
       - name: Create .env file
         uses: SpicyPizza/create-envfile@v2.0.3
         with:
           envkey_VITE_IMGUR_CLIENT_ID: ${{ vars.VITE_IMGUR_CLIENT_ID }}
           envkey_VITE_IMGUR_CLIENT_SECRET: ${{ secrets.VITE_IMGUR_CLIENT_SECRET }}
-      # Explore-GitHub-Actions:
-      #   runs-on: ubuntu-latest
-      #   steps:
-      #     - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      #     - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      #     - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      #     - name: Check out repository code
-      #       uses: actions/checkout@v4
-      #     - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      #     - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      #     - name: List files in the repository
-      #       run: |
-      #         ls ${{ github.workspace }}
-      #     - run: echo "🍏 This job's status is ${{ job.status }}."
-      # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -37,33 +21,21 @@ jobs:
           cache: 'npm'
       - run: npm install
       - run: npm run build --if-present
-      - run: ls
-      - name: get-npm-version
+      - name: Zip dist folder
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
-      # - uses: actions/checkout@v2
-      - run: ls
-      - run: echo "${{github.workspace}}"
-      - run: pwd
       - uses: montudor/action-zip@v1
         with:
           args: zip -qq -r dist${{ steps.package-version.outputs.current-version }}.zip dist
-      - uses: actions/upload-artifact@v4
+      - name: Upload zip file to s3
+        uses: actions/upload-artifact@v4
         with:
           name: my-artifact
           path: ${{ github.workspace }}/dist${{ steps.package-version.outputs.current-version }}.zip
-      - run: ls
-      # push-to-s3:
-      #   runs-on: ubuntu-latest
-      #   steps:
-      # - name: Checkout
-      # uses: actions/checkout@v4
-      - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ vars.AWS_S3_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
           aws-region: eu-west-2
-      - name: Sync files to S3 bucket
-        run: |
+      - run: |
           aws s3 cp "dist${{ steps.package-version.outputs.current-version }}.zip" s3://dnd-slots-extension-version-archive

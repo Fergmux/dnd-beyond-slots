@@ -109,18 +109,20 @@
     <input type="text" v-model="apiKey" />
     <button @click="updateKey">Save Key</button>
     <button @click="updateImage(Object.values(items))">Generate images</button>
+    <div>
+      <button @sync="sync">Sync data</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, ComputedRef, onMounted } from 'vue'
+import { computed, ComputedRef, onMounted, ref } from 'vue'
 import browser from 'webextension-polyfill'
-import { Slots, Slot, Item, Items } from '../types/types'
+import { Item, Items, Slot, Slots } from '../types/types'
 
-onMounted(() => {
-  // request a data sync from content script
-  chrome.runtime.sendMessage({ type: 'INIT' })
-})
+const sync = () => chrome.runtime.sendMessage({ type: 'INIT' })
+
+onMounted(sync)
 
 // listen to any data changes
 chrome.runtime.onMessage.addListener((request) => {

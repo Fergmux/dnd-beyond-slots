@@ -1,15 +1,10 @@
 <template>
-  <Manager :characterInfo ref="manager" />
+  <Manager ref="manager" />
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import Manager from './Manager.vue'
-import { ref, PropType } from 'vue'
-import { Data } from '../types/Character'
-
-defineProps({
-  characterInfo: Object as PropType<Data>
-})
 
 const manager = ref(null)
 </script>

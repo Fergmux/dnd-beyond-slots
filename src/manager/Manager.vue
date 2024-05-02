@@ -69,21 +69,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  ref,
-  ComputedRef,
-  WritableComputedRef,
-  Ref,
-  PropType
-} from 'vue'
-import { Slots, Slot, Item, Items, SyncEvent } from '../types/types'
-import { Data } from '../types/Character'
+import { computed, ComputedRef, ref, Ref, WritableComputedRef } from 'vue'
 import draggable from 'vuedraggable'
-
-defineProps({
-  characterInfo: Object as PropType<Data>
-})
+import { Item, Items, Slot, Slots, SyncEvent } from '../types/types'
 
 // GENERAL //
 

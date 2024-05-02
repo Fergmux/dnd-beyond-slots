@@ -1,28 +1,24 @@
+import { ImgurClient } from 'imgur'
+import isEqual from 'lodash/fp/isEqual'
+import OpenAI from 'openai'
 import { createApp } from 'vue'
-// import './src/style.css'
 import App from '../manager/App.vue'
-// import Manager from '../manager/Manager.vue'
+import { Data, Inventory, Response } from '../types/Character.ts'
 import {
   Event,
-  Slots,
-  Items,
   Item,
-  UpdateSlotsEvent,
+  Items,
+  Slots,
+  UpdateItemEvent,
   UpdateKeyEvent,
-  UpdateItemEvent
+  UpdateSlotsEvent
 } from '../types/types.ts'
-import { Response, Data, Inventory } from '../types/Character.ts'
-import OpenAI from 'openai'
-import isEqual from 'lodash/fp/isEqual'
-import { ImgurClient } from 'imgur'
 
 // limit of 12,500 requests per day, will upgrade if I hit that
 const client = new ImgurClient({
   clientId: import.meta.env.VITE_IMGUR_CLIENT_ID,
   clientSecret: import.meta.env.VITE_IMGUR_CLIENT_SECRET
 })
-
-// let manager: typeof Manager
 
 let characterInfo: Data
 let apiKey: string
@@ -53,8 +49,6 @@ let slots: Slots = {
     index: 3
   }
 }
-
-// chrome.storage.sync.clear()
 
 const mountApp = () => {
   // If we've inserted the app container return
@@ -160,8 +154,7 @@ const mountApp = () => {
       tabsContentContainer?.append(appContainer)
 
       // moun the app
-      createApp(App, { characterInfo }).mount('#slots-app')
-      // manager = app.$refs.manager as typeof Manager
+      createApp(App).mount('#slots-app')
 
       syncEvent()
     })
@@ -326,7 +319,7 @@ chrome.runtime.onMessage.addListener(async function (request: Event) {
   switch (request.type) {
     // popup on mount
     case 'INIT':
-      console.log('conent init', request)
+      console.log('conent.js init', request)
       syncEvent()
       break
     // item(s) updated

@@ -8,7 +8,8 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "package": "version=$(json -f manifest.json version) && zip -qq -r \"dist${version}.zip\" dist",
-    "build:dev": "name=$(json -f manifest.json name) && json -I -f manifest.json -e \"this.name = '$name (dev)'\" && (npm run build && npm run package && json -I -f manifest.json -e \"this.name = '$name'\") || json -I -f manifest.json -e \"this.name = '$name'\""
+    "build:dev": "name=$(json -f manifest.json name) && json -I -f manifest.json -e \"this.name = '$name (dev)'\" && (npm run build && json -I -f manifest.json -e \"this.name = '$name'\") || json -I -f manifest.json -e \"this.name = '$name'\"",
+    "package:dev": "name=$(json -f manifest.json name) && json -I -f manifest.json -e \"this.name = '$name (built)'\" && (npm run build && npm run package && json -I -f manifest.json -e \"this.name = '$name'\") || json -I -f manifest.json -e \"this.name = '$name'\""
   },
   "dependencies": {
     "chrome-types": "^0.1.282",

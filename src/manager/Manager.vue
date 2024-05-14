@@ -5,10 +5,15 @@
   <div class="container ct-content-group__content">
     <!-- SLOTS -->
 
-    <draggable :modelValue="slotsArray" tag="div" @update:modelValue="moveSlot">
+    <draggable
+      :modelValue="slotsArray"
+      tag="div"
+      style="display: flex; flex-wrap: wrap"
+      @update:modelValue="moveSlot"
+    >
       <template #item="{ element: slot }">
         <!-- <div @mouseover.stop="onDragOver"> -->
-        <div>
+        <div style="margin-right: 15px">
           <h4>{{ slot.name }}</h4>
 
           <!-- ITEMS -->
@@ -50,7 +55,7 @@
       group="items"
       class="slotList"
     >
-      <template #item="{ element: item }">
+      <template #item="{ element: item }: { element: Item }">
         <div
           :style="{
             'background-image': `url(${item.img})`,

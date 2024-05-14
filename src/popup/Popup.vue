@@ -6,10 +6,10 @@
       <tr>
         <th>Name</th>
         <th>Size</th>
-        <th>Index</th>
+        <th>Order</th>
         <th>Remove</th>
       </tr>
-      <tr v-for="slot in slots">
+      <tr v-for="slot in orderedSlots">
         <td>
           <input v-model="slot.name" @input="updateSlots" type="text" />
         </td>
@@ -33,6 +33,7 @@
       </tr>
     </table>
     <button @click="addSlot">Add slot</button>
+    <button @click="reorderSlots">Order slots</button>
 
     <h2>Items</h2>
     <table>
@@ -40,7 +41,7 @@
         <th>Item</th>
         <th>Slot</th>
         <th>Size</th>
-        <th>Index</th>
+        <th>Order</th>
         <th>Stack size</th>
         <th>Image</th>
         <th>AI Image</th>
@@ -106,6 +107,7 @@
       </tr>
     </table>
     <h2>OpenAI API Key</h2>
+
     <input type="text" v-model="apiKey" />
     <button @click="updateKey">Save Key</button>
     <button @click="updateImage(Object.values(items))">Generate images</button>
@@ -132,12 +134,20 @@ chrome.runtime.onMessage.addListener((request) => {
     slots.value = request.value.slots
     console.log(request.value.apiKey, 'API KEY POPUP')
     apiKey.value = request.value.apiKey
+    if (orderedSlots.value.length === 0) {
+      reorderSlots()
+    }
   }
 })
 
 // SLOTS //
 
 const slots = ref<Slots>({})
+const orderedSlots = ref<Slot[]>([])
+const reorderSlots = () =>
+  (orderedSlots.value = Object.values(slots.value).sort(
+    (a, b) => a.index - b.index
+  ))
 
 // add a slot
 const addSlot = () => {

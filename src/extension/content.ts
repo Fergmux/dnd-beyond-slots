@@ -182,7 +182,7 @@ const getItemImages = async (itemsToGet: Item[], force = false) => {
         // Generate image with dall-e
         const response = await openai.images.generate({
           model: 'dall-e-2',
-          prompt: `${item.name}, a digital painting in the style of dungeons and dragons art illustration on a white background`,
+          prompt: `${item.name}, a digital painting in the style of dungeons and dragons art illustration on a plain background`,
           n: 1,
           size: '256x256'
         })

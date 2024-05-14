@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DnD Beyond Slots",
   "description": "Adds a slot based inventory management to your DnD Beyond character sheet",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "action": {
     "default_popup": "index.html",
     "default_icon": "DnDSlots.png"
